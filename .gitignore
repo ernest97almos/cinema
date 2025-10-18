@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.egg-info/
+
+# SQLite database
+cinema.db
+
+# Virtual environment
+venv/
+.env
+
+# Logs
+*.log
