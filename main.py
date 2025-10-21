@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="Cinema Booking API")
 
 origins = [
-    "https://kino-app-lbaz.vercel.app"
+    "https://kino-app-lbaz.vercel.app/"
 ]
 
 app.add_middleware(
@@ -19,10 +19,8 @@ app.add_middleware(
 )
 
 
-
-
 Base.metadata.create_all(bind=engine)
 
 init_movies()
 
-app.include_router(router)
+app.include_router(router, prefix="/api")
