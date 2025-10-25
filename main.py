@@ -8,7 +8,7 @@ app = FastAPI(title="Cinema Booking API")
 
 origins = [
     "https://kino-app-lbaz.vercel.app/",
-    "localhost:3000"
+    "http://localhost:3000"  # обратите внимание на http://
 ]
 
 app.add_middleware(
