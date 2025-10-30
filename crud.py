@@ -9,6 +9,10 @@ def get_movies(db: Session):
 def get_booked_seats(db: Session, movie_id: int):
     return db.query(Booking).filter(Booking.movie_id == movie_id).all()
 
+def get_booked_by_email(db: Session, email: str):
+    return db.query(Booking).filter(Booking.email == email).all()
+
+
 def create_booking(db: Session, booking: BookingCreate):
     existing = db.query(Booking).filter(
         Booking.movie_id == booking.movie_id,

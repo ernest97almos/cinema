@@ -10,6 +10,10 @@ router = APIRouter()
 def get_movies(db: Session = Depends(get_db)):
     return crud.get_movies(db)
 
+@router.get("/bookings/{email}", response_model=list[schemas.BookingResponse])
+def get_booked_by_email(email: str, db: Session = Depends(get_db)):
+    return crud.get_booked_seats(db, email)
+
 # --- Bookings ---
 @router.get("/bookings/{movie_id}", response_model=list[schemas.BookingResponse])
 def get_booked_seats(movie_id: int, db: Session = Depends(get_db)):
