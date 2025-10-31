@@ -3,19 +3,14 @@ from database import engine, Base
 from routers import router
 from movies import init_movies
 from fastapi.middleware.cors import CORSMiddleware
-
-from models import Movie, Booking
-
-
-Base.metadata.drop_all(bind=engine)  # Удаляем старые таблицы
-Base.metadata.create_all(bind=engine)  # Создаем новые с исправленными моделями
+import os
 
 app = FastAPI(title="Cinema Booking API")
 
 origins = [
     "https://cinema-front-one.vercel.app",
     "https://kino-app-lbaz.vercel.app",
-    "http://localhost:3000"  # обратите внимание на http://
+    "http://localhost:3000"
 ]
 
 app.add_middleware(
@@ -26,9 +21,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def database_exists():
+    return os.path.exists("cinema.db")
 
-Base.metadata.create_all(bind=engine)
+if not database_exists():
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created")
 
-init_movies()
+
+    init_movies()
+else:
+    print("✅ Database already exists, skipping creation")
 
 app.include_router(router)

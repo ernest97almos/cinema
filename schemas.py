@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List
 
-# Существующие схемы - БЕЗ ИЗМЕНЕНИЙ
 class MovieResponse(BaseModel):
     id: int
     title: str
@@ -19,11 +18,6 @@ class MovieResponse(BaseModel):
         "from_attributes": True
     }
 
-class BookingCreate(BaseModel):
-    movie_id: int
-    seat_id: int
-    email: str
-
 class BookingResponse(BaseModel):
     id: int
     movie_id: int
@@ -35,7 +29,6 @@ class BookingResponse(BaseModel):
         "from_attributes": True
     }
 
-# НОВЫЕ схемы для множественного бронирования
 class MultipleBookingCreate(BaseModel):
     movie_id: int
     seat_ids: List[int]
@@ -47,8 +40,9 @@ class MultipleBookingResponse(BaseModel):
     booked_seats: List[int]
     failed_seats: List[int] = []
 
-# НОВЫЕ схемы для email
+# ОБНОВЛЯЕМ: добавляем movie_id
 class GroupedBookingResponse(BaseModel):
+    movie_id: int
     movie_title: str
     seat_ids: List[int]
     booking_date: str

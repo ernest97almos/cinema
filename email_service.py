@@ -2,33 +2,44 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
-from dotenv import load_dotenv
 import logging
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 class EmailService:
     def __init__(self):
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
-        self.smtp_username = os.getenv("GMAIL_USERNAME")
-        self.smtp_password = os.getenv("GMAIL_APP_PASSWORD")
+
+        # Пробуем получить из переменных окружения (Render)
+        self.smtp_username = os.environ.get("GMAIL_USERNAME")
+        self.smtp_password = os.environ.get("GMAIL_APP_PASSWORD")
+
+        # Если не найдены в окружении, пробуем из .env файла (для локальной разработки)
+        if not self.smtp_username or not self.smtp_password:
+            try:
+                from dotenv import load_dotenv
+                load_dotenv()
+                self.smtp_username = os.environ.get("GMAIL_USERNAME")
+                self.smtp_password = os.environ.get("GMAIL_APP_PASSWORD")
+            except ImportError:
+                pass  # dotenv не установлен, это нормально для продакшена
 
         if not self.smtp_username or not self.smtp_password:
-            logger.warning("⚠️ Gmail credentials not found in environment variables")
+            logger.warning("⚠️ Gmail credentials not found")
             logger.warning("⚠️ Email sending will be disabled")
             self.enabled = False
         else:
             self.enabled = True
             logger.info("✅ Email service initialized successfully")
+            # Тестируем подключение при инициализации
+            self._test_connection()
 
     def _test_connection(self):
-        """Тестирование подключения к SMTP серверу"""
+        """Test SMTP server connection"""
         if not self.enabled:
+            logger.warning("⚠️ Email service disabled, skipping connection test")
             return False
 
         try:
@@ -44,7 +55,7 @@ class EmailService:
             return False
 
     def format_seats(self, seat_ids):
-        """Форматирует список мест в красивый вид: 1,2,3,10,11,12"""
+        """Format seat list nicely: 1,2,3,10,11,12"""
         if not seat_ids:
             return ""
 
@@ -70,8 +81,8 @@ class EmailService:
 
         return ", ".join(ranges)
 
-    async def send_booking_confirmation(self, to_email: str, movie_title: str, seat_ids: list):
-        """Отправка подтверждения бронирования"""
+    def send_booking_confirmation(self, to_email: str, movie_title: str, seat_ids: list):
+        """Send booking confirmation email - СИНХРОННАЯ версия"""
         if not self.enabled:
             logger.info(f"📧 Email sending disabled. Would send to {to_email}: {movie_title} - seats {seat_ids}")
             return {"success": True, "message": "Email simulation"}
@@ -84,7 +95,6 @@ class EmailService:
             msg['To'] = to_email
             msg['Subject'] = "✅ Подтверждение бронирования в кинотеатре"
 
-            # HTML версия письма
             html_content = f"""
             <!DOCTYPE html>
             <html lang="ru">
@@ -113,6 +123,7 @@ class EmailService:
                             <p><strong>Количество мест:</strong> {len(seat_ids)}</p>
                             <p><strong>Email:</strong> {to_email}</p>
                         </div>
+                        <p><strong>Вы успешно забронировали места: {seats_str} на фильм "{movie_title}"</strong></p>
                         <p>Ждем вас в кинотеатре!</p>
                     </div>
                     <div class="footer">
@@ -125,7 +136,6 @@ class EmailService:
 
             msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
-            # Отправка через SMTP
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.ehlo()
                 server.starttls()
@@ -146,7 +156,7 @@ class EmailService:
             return {"success": False, "message": error_msg}
 
     async def send_all_bookings(self, to_email: str, bookings_data: list):
-        """Отправка всех бронирований пользователя"""
+        """Send all user bookings to email - оставляем асинхронной для endpoint"""
         if not self.enabled:
             logger.info(f"📧 Email sending disabled. Would send all bookings to {to_email}")
             return {"success": True, "message": "Email simulation"}
@@ -157,7 +167,6 @@ class EmailService:
             msg['To'] = to_email
             msg['Subject'] = "🎟️ Все ваши бронирования в кинотеатре"
 
-            # Формируем HTML с всеми бронированиями
             bookings_html = ""
             for booking in bookings_data:
                 seats_str = self.format_seats(booking['seat_ids'])
@@ -202,7 +211,6 @@ class EmailService:
 
             msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
-            # Отправка через SMTP
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.smtp_username, self.smtp_password)
@@ -216,5 +224,5 @@ class EmailService:
             logger.error(f"❌ {error_msg}")
             return {"success": False, "message": error_msg}
 
-# Создаем глобальный экземпляр
+# Create global instance
 email_service = EmailService()
