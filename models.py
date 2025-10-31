@@ -17,6 +17,9 @@ class Movie(Base):
     actors = Column(String)
     description = Column(String)
 
+    # Исправляем relationship - используем правильное имя
+    bookings = relationship("Booking", back_populates="movie")
+
 class Booking(Base):
     __tablename__ = "bookings"
 
@@ -26,7 +29,8 @@ class Booking(Base):
     email = Column(String)
     booking_date = Column(DateTime, default=datetime.utcnow)
 
-    movie = relationship("Movie")
+    # Исправляем на "movie" вместо "movie_rel"
+    movie = relationship("Movie", back_populates="bookings")
 
     __table_args__ = (
         UniqueConstraint("movie_id", "seat_id", name="unique_movie_seat"),

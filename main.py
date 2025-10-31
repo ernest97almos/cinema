@@ -4,6 +4,12 @@ from routers import router
 from movies import init_movies
 from fastapi.middleware.cors import CORSMiddleware
 
+from models import Movie, Booking
+
+
+Base.metadata.drop_all(bind=engine)  # Удаляем старые таблицы
+Base.metadata.create_all(bind=engine)  # Создаем новые с исправленными моделями
+
 app = FastAPI(title="Cinema Booking API")
 
 origins = [
